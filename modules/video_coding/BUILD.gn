@@ -361,6 +361,9 @@ rtc_library("video_coding_utility") {
 }
 
 rtc_library("webrtc_h264") {
+  libs = []
+  lib_dirs = []
+  include_dirs = []
   visibility = [ "*" ]
   sources = [
     "codecs/h264/h264.cc",
@@ -404,6 +407,22 @@ rtc_library("webrtc_h264") {
     if (!build_with_mozilla) {
       deps += [ "../../media:rtc_media_base" ]
     }
+  }
+  if (rtc_use_h264_nvenc) {
+    libs += [ "cuda", "nvidia-encode" ]
+    lib_dirs += [ "/lib/x86_64-linux-gnu" ]
+    # libs += [ "/lib/x86_64-linux-gnu/libcuda.so" ]
+    # libs += [ "/lib/x86_64-linux-gnu/libnvidia-encode.so" ]
+    include_dirs += [ "/usr/local/cuda/include" ]
+    sources += [
+      "codecs/h264/h264_nv_encoder_impl.h",
+      "codecs/h264/h264_nv_encoder_impl.cc",
+      "codecs/h264/include/nvEncodeAPI.h",
+      "codecs/h264/NvEncoder/NvEncoder.h",
+      "codecs/h264/NvEncoder/NvEncoder.cpp",
+      "codecs/h264/NvEncoder/NvEncoderCuda.h",
+      "codecs/h264/NvEncoder/NvEncoderCuda.cpp",
+    ]
   }
 }
 
@@ -891,6 +910,9 @@ if (rtc_include_tests) {
 
   rtc_library("video_coding_unittests") {
     testonly = true
+    libs = []
+    lib_dirs = []
+    include_dirs = []
 
     sources = [
       "chain_diff_calculator_unittest.cc",
@@ -936,6 +958,16 @@ if (rtc_include_tests) {
       sources += [
         "codecs/h264/h264_encoder_impl_unittest.cc",
         "codecs/h264/h264_simulcast_unittest.cc",
+      ]
+    }
+    if (rtc_use_h264_nvenc) {
+    #   libs += [ "/lib/x86_64-linux-gnu/libcuda.so" ]
+    #   libs += [ "/lib/x86_64-linux-gnu/libnvidia-encode.so" ]
+      libs += [ "cuda", "nvidia-encode" ]
+      lib_dirs += [ "/lib/x86_64-linux-gnu" ]
+      include_dirs += [ "/usr/local/cuda/include" ]
+      sources += [
+        "codecs/h264/h264_nv_encoder_impl_unittest.cc",
       ]
     }
 

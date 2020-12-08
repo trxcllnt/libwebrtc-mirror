@@ -131,7 +131,8 @@ class SimulcastTestFixtureImpl::TestDecodedImageCallback
     rtc::scoped_refptr<I420BufferInterface> i420_buffer =
         decoded_image.video_frame_buffer()->ToI420();
     for (int i = 0; i < decoded_image.width(); ++i) {
-      EXPECT_NEAR(kColorY, i420_buffer->DataY()[i], 1);
+      EXPECT_NEAR(kColorY, i420_buffer->DataY()[i],
+                  WEBRTC_USE_H264_NVENC ? 3 : 1);
     }
 
     // TODO(mikhal): Verify the difference between U,V and the original.
