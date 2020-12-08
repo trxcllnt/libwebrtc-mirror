@@ -18,9 +18,15 @@
 #include "api/video_codecs/sdp_video_format.h"
 #include "media/base/media_constants.h"
 
+#if defined(WEBRTC_USE_H264_NVENC)
+#include "modules/video_coding/codecs/h264/h264_nv_encoder_impl.h"
+#endif
+
 #if defined(WEBRTC_USE_H264)
 #include "modules/video_coding/codecs/h264/h264_decoder_impl.h"
+#if !defined(WEBRTC_USE_H264_NVENC)
 #include "modules/video_coding/codecs/h264/h264_encoder_impl.h"
+#endif
 #endif
 
 #include "rtc_base/checks.h"
@@ -30,13 +36,13 @@ namespace webrtc {
 
 namespace {
 
-#if defined(WEBRTC_USE_H264)
+#if defined(WEBRTC_USE_H264_NVENC) || defined(WEBRTC_USE_H264)
 bool g_rtc_use_h264 = true;
 #endif
 
 // If H.264 OpenH264/FFmpeg codec is supported.
 bool IsH264CodecSupported() {
-#if defined(WEBRTC_USE_H264)
+#if defined(WEBRTC_USE_H264_NVENC) || defined(WEBRTC_USE_H264)
   return g_rtc_use_h264;
 #else
   return false;
@@ -59,7 +65,7 @@ SdpVideoFormat CreateH264Format(H264::Profile profile,
 }
 
 void DisableRtcUseH264() {
-#if defined(WEBRTC_USE_H264)
+#if defined(WEBRTC_USE_H264_NVENC) || defined(WEBRTC_USE_H264)
   g_rtc_use_h264 = false;
 #endif
 }
@@ -87,7 +93,11 @@ std::vector<SdpVideoFormat> SupportedH264Codecs() {
 std::unique_ptr<H264Encoder> H264Encoder::Create(
     const cricket::VideoCodec& codec) {
   RTC_DCHECK(H264Encoder::IsSupported());
-#if defined(WEBRTC_USE_H264)
+#if defined(WEBRTC_USE_H264_NVENC)
+  RTC_CHECK(g_rtc_use_h264);
+  RTC_LOG(LS_INFO) << "Creating H264NvEncoderImpl.";
+  return std::make_unique<H264NvEncoderImpl>(codec);
+#elif defined(WEBRTC_USE_H264)
   RTC_CHECK(g_rtc_use_h264);
   RTC_LOG(LS_INFO) << "Creating H264EncoderImpl.";
   return std::make_unique<H264EncoderImpl>(codec);

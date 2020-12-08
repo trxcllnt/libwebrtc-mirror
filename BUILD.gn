@@ -269,6 +269,10 @@ config("common_config") {
     defines += [ "WEBRTC_USE_H264" ]
   }
 
+  if (rtc_use_h264_nvenc) {
+      defines += [ "WEBRTC_USE_H264_NVENC" ]
+  }
+
   if (rtc_use_absl_mutex) {
     defines += [ "WEBRTC_ABSL_MUTEX" ]
   }
