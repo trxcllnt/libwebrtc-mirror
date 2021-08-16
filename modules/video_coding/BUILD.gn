@@ -415,8 +415,8 @@ rtc_library("webrtc_h264") {
   if (rtc_use_h264_nvenc) {
     libs += [ "cuda", "nvidia-encode" ]
     lib_dirs += [ "/lib/x86_64-linux-gnu" ]
-    # libs += [ "/lib/x86_64-linux-gnu/libcuda.so" ]
-    # libs += [ "/lib/x86_64-linux-gnu/libnvidia-encode.so" ]
+    libs += [ "/lib/x86_64-linux-gnu/libcuda.so" ]
+    libs += [ "/lib/x86_64-linux-gnu/libnvidia-encode.so" ]
     include_dirs += [ "/usr/local/cuda/include" ]
     sources += [
       "codecs/h264/h264_nv_encoder_impl.h",
@@ -964,8 +964,8 @@ if (rtc_include_tests) {
       ]
     }
     if (rtc_use_h264_nvenc) {
-    #   libs += [ "/lib/x86_64-linux-gnu/libcuda.so" ]
-    #   libs += [ "/lib/x86_64-linux-gnu/libnvidia-encode.so" ]
+      libs += [ "/lib/x86_64-linux-gnu/libcuda.so" ]
+      libs += [ "/lib/x86_64-linux-gnu/libnvidia-encode.so" ]
       libs += [ "cuda", "nvidia-encode" ]
       lib_dirs += [ "/lib/x86_64-linux-gnu" ]
       include_dirs += [ "/usr/local/cuda/include" ]
