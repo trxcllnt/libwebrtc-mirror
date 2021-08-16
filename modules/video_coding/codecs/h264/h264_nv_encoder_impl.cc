@@ -548,7 +548,7 @@ VideoEncoder::EncoderInfo H264NvEncoderImpl::GetEncoderInfo() const {
   info.is_hardware_accelerated = true;
   info.has_internal_source = false;
   info.supports_simulcast = true;
-  info.preferred_pixel_formats = {VideoFrameBuffer::Type::kI420};
+  // info.preferred_pixel_formats = {VideoFrameBuffer::Type::kI420};
   return info;
 }
 
