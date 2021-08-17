@@ -198,21 +198,15 @@ int32_t H264NvEncoderImpl::InitEncode(const VideoCodec* inst,
         // TODO
         NV_ENC_PRESET_P7_GUID,
         // TODO
-        NV_ENC_TUNING_INFO_ULTRA_LOW_LATENCY));
+        NV_ENC_TUNING_INFO_HIGH_QUALITY));
 
+    // These settings cannot be changed via NvEncoderCuda::Reconfigure()
+    init_params.enablePTD = 1;
     init_params.enableWeightedPrediction = 1;
-    encode_config.rcParams.enableLookahead = false;
-    encode_config.rcParams.lowDelayKeyFrameScale = 1;
-    encode_config.encodeCodecConfig.h264Config.numTemporalLayers =
-        codec_.simulcastStream[stream_idx].numberOfTemporalLayers;
-    // TODO -- test temporal AQ
-    // encode_config.rcParams.enableTemporalAQ = 1;
-    encode_config.encodeCodecConfig.h264Config.repeatSPSPPS = 1;
-    encode_config.encodeCodecConfig.h264Config.disableSPSPPS = 0;
-    encode_config.encodeCodecConfig.h264Config.chromaFormatIDC =
-        1;  // 1 for YUV420
-    // TODO
-    encode_config.profileGUID = NV_ENC_H264_PROFILE_BASELINE_GUID;
+    encode_config.frameIntervalP = 1;
+    encode_config.gopLength = NVENC_INFINITE_GOPLENGTH;
+    encode_config.rcParams.lookaheadDepth = 6;
+    encode_config.rcParams.enableLookahead = 1;
 
     H264NVENCODER_NVENC_CALL(encoders_[i]->CreateEncoder(&init_params));
 
@@ -310,17 +304,30 @@ void H264NvEncoderImpl::SetRates(const RateControlParameters& parameters) {
     reconfig_params.reInitEncodeParams.frameRateDen = 1;
     reconfig_params.reInitEncodeParams.frameRateNum = codec_.maxFramerate;
 
+    encode_config.rcParams.enableAQ = 1;
+    encode_config.rcParams.aqStrength = 15;
+    encode_config.rcParams.enableTemporalAQ = 1;
+    encode_config.rcParams.lowDelayKeyFrameScale = 2;
+    encode_config.encodeCodecConfig.h264Config.numTemporalLayers =
+        codec_.simulcastStream[stream_idx].numberOfTemporalLayers;
+    encode_config.encodeCodecConfig.h264Config.repeatSPSPPS = 1;
+    encode_config.encodeCodecConfig.h264Config.disableSPSPPS = 0;
+    encode_config.encodeCodecConfig.h264Config.chromaFormatIDC =
+        1;  // 1 for YUV420
+    // TODO
+    encode_config.profileGUID = NV_ENC_H264_PROFILE_BASELINE_GUID;
+
     // Enable VBR with Constant Rate Factor (CRF) quality for decent on-the-fly
     // streaming
     encode_config.rcParams.rateControlMode = NV_ENC_PARAMS_RC_VBR;
     encode_config.rcParams.targetQuality = kLowH264QpThreshold - 1;
 
-    encode_config.rcParams.vbvBufferSize =
-        static_cast<uint32_t>(1.05f *  //
-                              max_payload_size_ * 8
-                              // TODO: Is this a better VBV size?
-                              // bitrate * 1 / codec_.maxFramerate
-        );
+    encode_config.rcParams.vbvBufferSize = static_cast<uint32_t>(
+        // 1s (large VBV size)
+        parameters.bitrate.get_sum_bps()
+        // 1 frame (small VBV size)
+        // parameters.bitrate.get_sum_bps() / codec_.maxFramerate
+    );
     encode_config.rcParams.vbvInitialDelay =
         encode_config.rcParams.vbvBufferSize;
 
